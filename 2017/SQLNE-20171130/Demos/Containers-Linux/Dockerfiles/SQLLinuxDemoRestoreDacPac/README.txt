@@ -1,0 +1,1 @@
+NOTE: The mssql-tools have temporarily been removed from the microsoft/mssql-server-linux images which means that this demo will not work until it is reinstated.

@@ -1,0 +1,40 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: aks-sqlserver
+  labels:
+    app: aks-sqlserver
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: aks-sqlserver
+        app: mssqlserver
+    spec:
+      containers:
+      - name: aks-sqlserver
+        #image: microsoft/mssql-server-linux:latest
+        image: jcldevops.azurecr.io/azuredevops:latest
+        command: ["/bin/sh", "-c", "/opt/mssql/bin/sqlservr"]
+        ports:
+        - containerPort: 1433
+        env:
+        - name: SA_PASSWORD
+          value: "P@ssword1"
+        - name: ACCEPT_EULA
+          value: "Y"
+        
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aks-sqlserver-service
+spec:
+  ports:
+  - name: aks-sqlserver
+    port: 1433
+    targetPort: 1433
+  selector:
+    name: aks-sqlserver
+  type: LoadBalancer

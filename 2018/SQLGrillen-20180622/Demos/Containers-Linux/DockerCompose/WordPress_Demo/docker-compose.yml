@@ -1,0 +1,30 @@
+version: '2'
+
+services:
+  wordpress:
+    image: wordpress:latest
+    links:
+      - database:mariadb
+    environment:
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_NAME=mydbname
+      - WORDPRESS_TABLE_PREFIX=ab_
+      - WORDPRESS_DB_PASSWORD=password
+      - WORDPRESS_DB_HOST=mariadb
+      - MYSQL_PORT_3306_TCP=3306
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    working_dir: /var/www/html
+    volumes:
+     - ./wordpress/:/var/www/html/
+  database:
+   image: mariadb:latest
+   environment:
+     - MYSQL_ROOT_PASSWORD=password
+     - MYSQL_DATABASE=mydbname
+     - MYSQL_USER=wordpress
+     - MYSQL_PASSWORD=password
+   restart: unless-stopped
+   ports:
+     - "3306:3306"
