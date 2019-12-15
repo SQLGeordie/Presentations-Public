@@ -1,0 +1,67 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: minikube-sqlserver
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: minikube-mssql
+    spec:
+      containers:
+      - name: minikube-sqlserver
+        image: mcr.microsoft.com/mssql/server:2019-CTP3.2-ubuntu
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
+          limits:
+            memory: "1Gi"
+            cpu: "0.5"
+        ports:
+        - containerPort: 1433
+        env:
+        - name: MSSQL_PID
+          value: "Developer"
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: minikube-mssql
+              key: SA_PASSWORD 
+        - name: MSSQL_DATA_DIR
+          value: '/demo/data'
+        - name: MSSQL_LOG_DIR
+          value: '/demo/log'
+        volumeMounts:
+        - name: vol-minikube-mssql-systemdbs
+          mountPath: /var/opt/mssql/
+        - name: vol-minikube-mssql-data
+          mountPath: /demo/data
+        - name: vol-minikube-mssql-logs
+          mountPath: /demo/log
+      volumes:
+      - name: vol-minikube-mssql-systemdbs
+        persistentVolumeClaim:
+          claimName: pvc-minikube-mssql-systemdbs
+      - name: vol-minikube-mssql-data
+        persistentVolumeClaim:
+          claimName: pvc-minikube-mssql-data
+      - name: vol-minikube-mssql-logs
+        persistentVolumeClaim:
+          claimName: pvc-minikube-mssql-logs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minikube-sqlserver-service
+spec:
+  selector:
+    app: minikube-mssql
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433
+  type: ClusterIP
