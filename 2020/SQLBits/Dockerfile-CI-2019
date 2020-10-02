@@ -1,0 +1,30 @@
+FROM jcldevops.azurecr.io/azuredevops:demo2019
+
+# Create sql script directory
+WORKDIR /dacpac
+
+#Copy dacpac to image in order to run it
+COPY . /dacpac
+
+#Set ARG for sapwd passed in by build args
+ARG sapwd
+
+#Set SQL Server Config, limit container (not SQL Instance) memory to 3000MB
+ENV ACCEPT_EULA="Y"  \
+	MSSQL_SA_PASSWORD=$sapwd  \
+	MSSQL_MEMORY_LIMIT_MB="3000"  
+
+
+#Deploy dacpac and run tSQLt Tests
+#See https://stackoverflow.com/a/51589787/488695
+RUN ( /opt/mssql/bin/sqlservr --accept-eula & sleep 20 ) | grep -q "Service Broker manager has started" \
+	&& /sqlpackage/sqlpackage /Action:Publish /SourceFile:"/dacpac/drop/AdventureWorksLT2017.dacpac" /p:CreateNewDatabase=false /TargetConnectionString:"Data Source=localhost;User ID=sa;Password=P@ssword1;Database=AdventureWorksLT2017;Pooling=False" \
+	&& /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P $sapwd -d AdventureWorksLT2017 -i '/dacpac/drop/tSQLtDocker/tSQLt.class.sql' \
+	&& /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P $sapwd -d AdventureWorksLT2017 -i '/dacpac/drop/tSQLtDocker/DEMO-tSQLt-TestScript.sql' \
+	&& /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P $sapwd -d AdventureWorksLT2017 -i '/dacpac/drop/tSQLtDocker/tSQLt.RunAll.sql' \
+	&& /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P $sapwd -d AdventureWorksLT2017 -i '/dacpac/drop/tSQLtDocker/tSQLt.DropClass.sql' \
+	&& pkill sqlservr
+
+
+#This will run when docker/kubectl run
+CMD [ "/opt/mssql/bin/sqlservr" ]
