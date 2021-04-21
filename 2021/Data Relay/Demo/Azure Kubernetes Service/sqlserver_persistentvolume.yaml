@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: aks-sqlserver
-        image: ctaksacrdemo.azurecr.io/mssqldemo:2017-cu21
+        image: mcr.microsoft.com/mssql/server:2017-CU21-ubuntu-16.04
         resources:
           requests:
             memory: "2Gi"

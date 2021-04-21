@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: aks-sqlserver-nopvc
-        image: ctaksacrdemo.azurecr.io/mssqldemo:2017-cu23
+        image: mcr.microsoft.com/mssql/server:2017-CU23-ubuntu-16.04
         resources:
           requests:
             memory: "1Gi"
