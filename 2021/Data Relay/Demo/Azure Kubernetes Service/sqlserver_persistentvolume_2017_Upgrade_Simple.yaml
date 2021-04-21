@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aks-sqlserver-nopvc  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aks-sqlserver-nopvc
+  template:
+    metadata:
+      labels:
+        app: aks-sqlserver-nopvc
+    spec:
+      containers:
+      - name: aks-sqlserver-nopvc
+        image: ctaksacrdemo.azurecr.io/mssqldemo:2017-cu23
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        ports:
+        - containerPort: 1433
+        env:
+        - name: MSSQL_PID
+          value: "Developer"
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: SA_PASSWORD
+          value: "P@ssword1"

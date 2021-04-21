@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aks-sqlserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aks-mssql
+  template:
+    metadata:
+      labels:
+        app: aks-mssql
+    spec:
+      containers:
+      - name: aks-sqlserver
+        image: ctaksacrdemo.azurecr.io/mssqldemo:2017-cu21
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+        ports:
+        - containerPort: 1433
+        env:
+        - name: MSSQL_PID
+          value: "Developer"
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-aks-mssql
+              key: SA_PASSWORD 
+        - name: MSSQL_DATA_DIR
+          value: '/demo/data'
+        - name: MSSQL_LOG_DIR
+          value: '/demo/log'
+        volumeMounts:
+        - name: vol-aks-mssql-systemdbs
+          mountPath: /var/opt/mssql/
+        - name: vol-aks-mssql-data
+          mountPath: /demo/data
+        - name: vol-aks-mssql-logs
+          mountPath: /demo/log
+      volumes:
+      - name: vol-aks-mssql-systemdbs
+        persistentVolumeClaim:
+          claimName: pvc-aks-mssql-systemdbs
+      - name: vol-aks-mssql-data
+        persistentVolumeClaim:
+          claimName: pvc-aks-mssql-data
+      - name: vol-aks-mssql-logs
+        persistentVolumeClaim:
+          claimName: pvc-aks-mssql-logs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aks-sqlserver-service
+spec:
+  selector:
+    app: aks-mssql
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433
+  type: LoadBalancer
